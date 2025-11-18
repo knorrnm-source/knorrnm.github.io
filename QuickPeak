@@ -1,0 +1,368 @@
+import React, { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { motion } from "framer-motion";
+
+/*
+  QuickPeak Affiliate Group — Frontend (React) with a simple backend blueprint included below.
+  Features added:
+  - Simple SVG logo (Logo component) placed in the Navbar
+  - Luxury color palette via CSS variables
+  - Interactive components: Search, Pagination, Cards, Star rating, Data table
+  - Frontend expects a minimal JSON API at /api/* for posts, reviews, distributions, signup
+  - Backend blueprint (Express + lowdb) is included at the bottom of this file as a template string
+
+  Note: To fully enable the backend locally, create a separate server file (server.js) using the template
+  below, install dependencies (express, cors, lowdb or sqlite), and run it alongside this React app.
+*/
+
+// -------------------- Theme (CSS-in-JS) --------------------
+const themeVariables = {
+  "--qp-bg": "#F7F4F1", // cream
+  "--qp-card": "#FFFFFF",
+  "--qp-text": "#0B0B0B",
+  "--qp-muted": "#6B6B6B",
+  "--qp-accent": "#BFA06A", // gold
+  "--qp-accent-dark": "#8C6B3E",
+  "--qp-ink": "#111827", // charcoal
+};
+
+const PageWrapper = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    style={themeVariables}
+    className="p-8 max-w-5xl mx-auto"
+  >
+    <div style={{ color: 'var(--qp-text)' }}>{children}</div>
+  </motion.div>
+);
+
+// -------------------- Logo --------------------
+const Logo = ({ size = 40 }) => (
+  <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-label="QuickPeak logo">
+    <defs>
+      <linearGradient id="g1" x1="0" x2="1">
+        <stop offset="0%" stopColor="#F8EFD4" />
+        <stop offset="100%" stopColor="#BFA06A" />
+      </linearGradient>
+    </defs>
+    <rect rx="16" width="100" height="100" fill="var(--qp-ink)" />
+    <path d="M18 68 L50 22 L82 68 Z" fill="url(#g1)" />
+    <circle cx="50" cy="60" r="6" fill="var(--qp-ink)" />
+  </svg>
+);
+
+// -------------------- UI Components --------------------
+const Navbar = () => (
+  <nav style={{ background: 'var(--qp-card)', borderBottom: '1px solid rgba(0,0,0,0.06)' }} className="w-full flex justify-between items-center p-4 shadow-sm">
+    <div className="flex items-center gap-4">
+      <Logo size={44} />
+      <div>
+        <h1 style={{ color: 'var(--qp-ink)' }} className="text-2xl font-serif font-semibold">QuickPeak</h1>
+        <div style={{ color: 'var(--qp-muted)' }} className="text-xs -mt-1">Affiliate Group</div>
+      </div>
+    </div>
+
+    <div className="flex gap-6 items-center">
+      <Link to="/" style={{ color: 'var(--qp-ink)' }}>Home</Link>
+      <Link to="/blog" style={{ color: 'var(--qp-ink)' }}>Blog</Link>
+      <Link to="/reviews" style={{ color: 'var(--qp-ink)' }}>Reviews</Link>
+      <Link to="/distribution" style={{ color: 'var(--qp-ink)' }}>Distribution</Link>
+      <Link to="/signup" className="px-3 py-2 rounded-md" style={{ background: 'var(--qp-accent)', color: '#fff' }}>Join</Link>
+    </div>
+  </nav>
+);
+
+const SearchBar = ({ value, onChange, placeholder = 'Search...' }) => (
+  <div className="flex items-center gap-2 mb-4">
+    <input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="p-3 rounded-lg border w-full" />
+  </div>
+);
+
+const Card = ({ title, excerpt, meta }) => (
+  <div style={{ background: 'var(--qp-card)', border: '1px solid rgba(0,0,0,0.05)' }} className="p-6 rounded-2xl shadow-sm">
+    <h3 className="text-xl font-semibold mb-2" style={{ color: 'var(--qp-ink)' }}>{title}</h3>
+    <p style={{ color: 'var(--qp-muted)' }}>{excerpt}</p>
+    {meta && <div className="text-sm mt-3" style={{ color: 'var(--qp-muted)' }}>{meta}</div>}
+  </div>
+);
+
+const StarRating = ({ value = 4 }) => (
+  <div className="flex gap-1 items-center">
+    {Array.from({ length: 5 }).map((_, i) => (
+      <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill={i < value ? 'var(--qp-accent)' : 'none'} stroke="var(--qp-accent-dark)" strokeWidth="1" aria-hidden>
+        <path d="M12 .587l3.668 7.431 8.2 1.193-5.934 5.788 1.402 8.176L12 18.896l-7.336 3.879 1.402-8.176L.132 9.211l8.2-1.193z" />
+      </svg>
+    ))}
+  </div>
+);
+
+// -------------------- Pages --------------------
+const Home = () => (
+  <PageWrapper>
+    <div className="grid md:grid-cols-2 gap-8 items-start">
+      <div>
+        <h2 className="text-4xl font-serif font-semibold mb-4">Welcome to QuickPeak</h2>
+        <p className="text-lg mb-6" style={{ color: 'var(--qp-muted)' }}>QuickPeak Affiliate Group is your gateway to high‑end affiliate marketing insights, premium partnerships, and cutting‑edge performance tools. Our mission is simple: empower affiliates with clarity, transparency, and profitable opportunities.</p>
+
+        <ul className="list-disc ml-6 text-lg space-y-2" style={{ color: 'var(--qp-text)' }}>
+          <li>Curated programs from top‑tier brands</li>
+          <li>Data-driven strategies and playbooks</li>
+          <li>Weekly payouts & transparent reporting</li>
+          <li>Dedicated partner support</li>
+        </ul>
+
+        <div className="mt-6 flex gap-3">
+          <Link to="/signup" className="px-5 py-3 rounded-full" style={{ background: 'var(--qp-accent)', color: '#fff' }}>Get Early Access</Link>
+          <Link to="/distribution" className="px-5 py-3 rounded-full border" style={{ borderColor: 'rgba(0,0,0,0.06)' }}>Partner Portal</Link>
+        </div>
+      </div>
+
+      <div>
+        <Card title="Premium Offers" excerpt="Hand-picked affiliate offers with high EPC, vetted vendors, and luxury product fit." meta="Updated weekly" />
+        <div className="mt-4 grid grid-cols-2 gap-4">
+          <Card title="Analytics" excerpt="Deep insights and conversion tracking" />
+          <Card title="Creative Assets" excerpt="Banners, videos, and landing page templates" />
+        </div>
+      </div>
+    </div>
+  </PageWrapper>
+);
+
+// -------- Blog: interactive list (fetches from /api/posts) --------
+const Blog = () => {
+  const [posts, setPosts] = useState([]);
+  const [q, setQ] = useState('');
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    // fetch posts from backend (example endpoint)
+    fetch(`/api/posts?q=${encodeURIComponent(q)}&page=${page}`)
+      .then(r => r.json())
+      .then(data => setPosts(data.posts || []))
+      .catch(() => {
+        // fallback: local demo posts
+        setPosts([
+          { id: 1, title: 'How to Choose High‑Converting Offers', excerpt: 'Identify products with strong EPC and low refunds.' },
+          { id: 2, title: 'Luxury Branding for Affiliates', excerpt: 'Presentation matters — here’s how to craft a premium aesthetic.' },
+        ]);
+      });
+  }, [q, page]);
+
+  return (
+    <PageWrapper>
+      <h2 className="text-3xl font-semibold mb-4">Blog</h2>
+      <SearchBar value={q} onChange={setQ} placeholder="Search articles, guides, and case studies" />
+
+      <div className="space-y-4">
+        {posts.map(p => (
+          <div key={p.id} className="p-4 rounded-xl border hover:shadow transition-shadow" style={{ background: 'var(--qp-card)' }}>
+            <h3 className="text-xl font-semibold">{p.title}</h3>
+            <p className="mt-2" style={{ color: 'var(--qp-muted)' }}>{p.excerpt}</p>
+            <div className="mt-3 flex gap-3">
+              <Link to={`/blog/${p.id}`} className="text-sm">Read more →</Link>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 flex gap-2">
+        <button onClick={() => setPage(Math.max(1, page - 1))} className="px-3 py-2 rounded-md border">Prev</button>
+        <div className="px-4 py-2">Page {page}</div>
+        <button onClick={() => setPage(page + 1)} className="px-3 py-2 rounded-md border">Next</button>
+      </div>
+    </PageWrapper>
+  );
+};
+
+// -------- Reviews: interactive filters and ratings --------
+const Reviews = () => {
+  const [reviews, setReviews] = useState([]);
+  const [minRating, setMinRating] = useState(0);
+
+  useEffect(() => {
+    fetch(`/api/reviews?minRating=${minRating}`)
+      .then(r => r.json())
+      .then(data => setReviews(data.reviews || []))
+      .catch(() => setReviews([
+        { id: 1, title: 'PeakTrack Analytics', excerpt: 'Intuitive dashboards, perfect for growth-focused affiliates.', rating: 5 },
+        { id: 2, title: 'LuxLink Email', excerpt: 'Beautiful templates and reliable delivery.', rating: 4 },
+      ]));
+  }, [minRating]);
+
+  return (
+    <PageWrapper>
+      <h2 className="text-3xl font-semibold mb-4">Reviews</h2>
+      <div className="flex gap-4 items-center mb-6">
+        <label style={{ color: 'var(--qp-muted)' }}>Minimum rating:</label>
+        <select value={minRating} onChange={e => setMinRating(Number(e.target.value))} className="p-2 rounded">
+          <option value={0}>All</option>
+          <option value={3}>3+</option>
+          <option value={4}>4+</option>
+          <option value={5}>5</option>
+        </select>
+      </div>
+
+      <div className="grid gap-4">
+        {reviews.map(r => (
+          <div key={r.id} className="p-4 rounded-2xl border" style={{ background: 'var(--qp-card)' }}>
+            <div className="flex justify-between items-start">
+              <div>
+                <h3 className="text-xl font-semibold">{r.title}</h3>
+                <p style={{ color: 'var(--qp-muted)' }}>{r.excerpt}</p>
+              </div>
+              <div className="text-right">
+                <StarRating value={r.rating || 4} />
+                <div style={{ color: 'var(--qp-muted)' }} className="text-sm mt-1">{r.rating || 4}/5</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </PageWrapper>
+  );
+};
+
+// -------- Signup page (posts to /api/signup) --------
+const Signup = () => {
+  const [email, setEmail] = useState('');
+  const [status, setStatus] = useState(null);
+
+  const submit = (e) => {
+    e.preventDefault();
+    fetch('/api/signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) })
+      .then(r => r.json())
+      .then(() => setStatus('Thanks — check your inbox.'))
+      .catch(() => setStatus('Signup saved locally (demo mode).'));
+  };
+
+  return (
+    <PageWrapper>
+      <h2 className="text-3xl font-semibold mb-4">Join Our Email List</h2>
+      <p className="text-lg mb-4" style={{ color: 'var(--qp-muted)' }}>Get exclusive insights, private drops, and affiliate playbooks.</p>
+      <form onSubmit={submit} className="flex flex-col gap-4 max-w-md">
+        <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="email@domain.com" className="border p-3 rounded-xl" required />
+        <button type="submit" className="p-3 rounded-xl shadow" style={{ background: 'var(--qp-ink)', color: '#fff' }}>Sign Up</button>
+        {status && <div style={{ color: 'var(--qp-accent-dark)' }}>{status}</div>}
+      </form>
+    </PageWrapper>
+  );
+};
+
+// -------- Distribution portal (data table) --------
+const Distribution = () => {
+  const [rows, setRows] = useState([]);
+
+  useEffect(() => {
+    fetch('/api/distributions')
+      .then(r => r.json())
+      .then(data => setRows(data.distributions || []))
+      .catch(() => setRows([
+        { id: 'd_001', date: '2025-11-01', amount: '$1,250.00', status: 'Paid' },
+        { id: 'd_002', date: '2025-11-08', amount: '$980.00', status: 'Processing' },
+      ]));
+  }, []);
+
+  return (
+    <PageWrapper>
+      <h2 className="text-3xl font-semibold mb-4">Affiliate Distribution Portal</h2>
+      <p className="mb-4" style={{ color: 'var(--qp-muted)' }}>View payout history, download invoices, or request support.</p>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full rounded-xl" style={{ borderCollapse: 'separate', borderSpacing: 0 }}>
+          <thead>
+            <tr style={{ textAlign: 'left' }}>
+              <th className="p-3">ID</th>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(r => (
+              <tr key={r.id} className="border-t">
+                <td className="p-3">{r.id}</td>
+                <td>{r.date}</td>
+                <td>{r.amount}</td>
+                <td>{r.status}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </PageWrapper>
+  );
+};
+
+export default function App() {
+  return (
+    <Router>
+      <div style={{ background: 'var(--qp-bg)', minHeight: '100vh' }}>
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/reviews" element={<Reviews />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/distribution" element={<Distribution />} />
+        </Routes>
+      </div>
+    </Router>
+  );
+}
+
+// -------------------- Backend blueprint (Express + in-memory store) --------------------
+// Save the following as server.js at your project root and run with `node server.js`.
+
+const backendBlueprint = `
+// server.js (minimal) — Demo backend for QuickPeak
+
+const express = require('express');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+const app = express();
+app.use(cors());
+app.use(bodyParser.json());
+
+// Simple in-memory stores (replace with a proper DB in production)
+let POSTS = [
+  { id: 1, title: 'How to Choose High-Converting Offers', excerpt: 'Identify products with strong EPC and low refunds.' },
+  { id: 2, title: 'Luxury Branding for Affiliates', excerpt: 'Presentation matters — here’s how to craft a premium aesthetic.' },
+];
+
+let REVIEWS = [
+  { id: 1, title: 'PeakTrack Analytics', excerpt: 'Intuitive dashboards.', rating: 5 },
+  { id: 2, title: 'LuxLink Email', excerpt: 'Beautiful templates.', rating: 4 },
+];
+
+let DISTRIBUTIONS = [
+  { id: 'd_001', date: '2025-11-01', amount: '$1,250.00', status: 'Paid' }
+];
+
+let SIGNUPS = [];
+
+app.get('/api/posts', (req, res) => {
+  const q = (req.query.q || '').toLowerCase();
+  const page = Number(req.query.page || 1);
+  const filtered = POSTS.filter(p => p.title.toLowerCase().includes(q) || p.excerpt.toLowerCase().includes(q));
+  res.json({ posts: filtered.slice((page-1)*10, page*10) });
+});
+
+app.get('/api/reviews', (req, res) => {
+  const min = Number(req.query.minRating || 0);
+  res.json({ reviews: REVIEWS.filter(r => (r.rating||0) >= min) });
+});
+
+app.get('/api/distributions', (req, res) => {
+  res.json({ distributions: DISTRIBUTIONS });
+});
+
+app.post('/api/signup', (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'email required' });
+  SIGNUPS.push({ email, date: new Date().toISOString() });
+  res.json({ ok: true });
+});
+
+app.listen(4000, () => console.log('QuickPeak demo backend running on http://localhost:4000'));
+`;
